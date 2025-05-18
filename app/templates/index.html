@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Digital Wallet</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f7f7f7; padding: 2rem; }
+    .card { max-width: 600px; margin: auto; }
+  </style>
+</head>
+<body>
+
+<div class="card p-4 shadow">
+  <h3 class="mb-3">Digital Wallet</h3>
+
+  <div class="mb-3">
+    <input type="text" id="username" class="form-control" placeholder="Username">
+    <input type="password" id="password" class="form-control mt-2" placeholder="Password">
+    <button class="btn btn-primary mt-2" type="button" onclick="register()">Register</button>
+    <button class="btn btn-secondary mt-2" type="button" onclick="login()">Login</button>
+  </div>
+
+  <div class="mb-3">
+    <hr>
+    <h5>Wallet Operations</h5>
+    <input type="number" id="amount" class="form-control" placeholder="Amount">
+    <input type="text" id="currency" class="form-control mt-2" placeholder="Currency (USD, BONUS)" value="USD">
+    <input type="text" id="recipient" class="form-control mt-2" placeholder="Recipient (for transfer)">
+    <div class="mb-3">
+      <button class="btn btn-secondary mt-2" type="button" onclick="deposit()">Deposit</button>
+      <button class="btn btn-warning" type="button" onclick="withdraw()">Withdraw</button>
+      <button class="btn btn-info" type="button" onclick="transfer()">Transfer</button>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <hr>
+    <button class="btn btn-outline-dark" type="button" onclick="ping()">Ping Wallet</button>
+  </div>
+
+  <pre id="output" class="bg-light p-2 border rounded small"></pre>
+</div>
+
+<script>
+  let token = null;
+
+  function showOutput(data) {
+    document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+  }
+
+  async function register() {
+    const res = await fetch('http://127.0.0.1:5000/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value
+      })
+    });
+    const data = await res.json();
+    showOutput(data);
+  }
+
+  async function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    if (!username || !password) {
+      showOutput({ msg: 'Username and password are required' });
+      return;
+    }
+
+    try {
+      const res = await fetch('http://127.0.0.1:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showOutput({ msg: data.msg || 'Login failed' });
+        return;
+      }
+
+      token = data.access_token;
+      showOutput({ msg: 'Login successful', token });
+
+    } catch (err) {
+      showOutput({ msg: 'Network error or server not responding' });
+      console.error(err);
+    }
+  }
+
+  async function deposit() {
+    const res = await fetch('http://127.0.0.1:5000/api/wallet/deposit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        amount: parseFloat(document.getElementById('amount').value),
+        currency: document.getElementById('currency').value
+      })
+    });
+    const data = await res.json();
+    balance = data.balance 
+    showOutput(balance);
+  }
+
+  async function withdraw() {
+    const res = await fetch('http://127.0.0.1:5000/api/wallet/withdraw', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        amount: parseFloat(document.getElementById('amount').value),
+        currency: document.getElementById('currency').value
+      })
+    });
+    const data = await res.json();
+    showOutput(data);
+  }
+
+  async function transfer() {
+    const res = await fetch('http://127.0.0.1:5000/api/wallet/transfer', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        amount: parseFloat(document.getElementById('amount').value),
+        currency: document.getElementById('currency').value,
+        to: document.getElementById('recipient').value
+      })
+    });
+    const data = await res.json();
+    showOutput(data);
+  }
+
+  async function ping() {
+    const res = await fetch('http://127.0.0.1:5000/api/wallet/ping', {
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    showOutput(data);
+  }
+</script>
+
+</body>
+</html>
