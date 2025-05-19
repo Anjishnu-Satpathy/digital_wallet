@@ -27,6 +27,8 @@ def create_app():
     from app.routes.wallet import wallet_bp
     app.register_blueprint(wallet_bp, url_prefix='/api/wallet')
 
-    
+    from app.routes.admin import admin_bp
+    app.register_blueprint(admin_bp)
+
 
     return app

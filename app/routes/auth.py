@@ -11,7 +11,12 @@ def register():
     if User.query.filter_by(username=data['username']).first():
         return jsonify({'msg': 'User already exists'}), 409
 
-    user = User(username=data['username'])
+    # Default role is 'user' unless explicitly provided as 'admin'
+    role = data.get('role', 'user')
+    if role not in ['user', 'admin']:
+        return jsonify({'msg': 'Invalid role'}), 400
+
+    user = User(username=data['username'], role=role)
     user.set_password(data['password'])
 
     db.session.add(user)
@@ -21,7 +26,8 @@ def register():
     db.session.add(wallet)
     db.session.commit()
 
-    return jsonify({'msg': 'User registered successfully'}), 201
+    return jsonify({'msg': f'{role.capitalize()} registered successfully'}), 201
+
 
 @auth_bp.route('/login', methods=['POST'])
 def login():

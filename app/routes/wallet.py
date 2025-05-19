@@ -101,7 +101,7 @@ def withdraw():
     db.session.add(transaction)
     db.session.commit()
 
-    return jsonify({'msg': f'{amount} {currency} withdrawn successfully'}), 200
+    return jsonify({'msg': f'{amount} {currency} withdrawn successfully','balance': wallet.balance}), 200
 
 
 @wallet_bp.route('/transfer', methods=['POST'])
@@ -187,7 +187,3 @@ def transaction_history():
         })
 
     return jsonify({'transactions': history})
-
-@wallet_bp.route('/')
-def index():
-    return render_template('index.html')
